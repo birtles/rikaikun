@@ -70,10 +70,9 @@ export class RikaiPuck {
   }
   private readonly onPointermove = (event: PointerEvent) => {
     event.preventDefault();
-    const { clientX, clientY, offsetX, offsetY } = event;
-    this.puckX = clientX - offsetX;
-    this.puckY = clientY - offsetY;
-    // TODO: Instead of dispatching a "mousemove" event, call the necessary part of the ContentHandler's onMouseMove() function.
+    const { clientX, clientY } = event;
+    this.puckX = clientX - this.puckWidth / 2;
+    this.puckY = clientY - this.puckHeight / 2;
     window.dispatchEvent(
       new MouseEvent(
         "mousemove",
