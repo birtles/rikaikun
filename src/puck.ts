@@ -68,19 +68,6 @@ export class RikaiPuck {
     // We use a z-index one higher than the Rikai popup itself.
     this.puck.style.zIndex = "1000002";
   }
-
-  private readonly onTouchstart = (event: TouchEvent) => {
-    // console.log(0);
-  }
-  private readonly onTouchend = (event: TouchEvent) => {
-    // console.log(1);
-  }
-  private readonly onTouchcancel = (event: TouchEvent) => {
-    // console.log(2);
-  }
-  private readonly onTouchleave = (event: TouchEvent) => {
-    // console.log(3);
-  }
   private readonly onPointermove = (event: PointerEvent) => {
     event.preventDefault();
     const { clientX, clientY } = event;
@@ -115,18 +102,10 @@ export class RikaiPuck {
   }
 
   enable(): void {
-    this.puck.addEventListener("touchstart", this.onTouchstart);
-    this.puck.addEventListener("touchend", this.onTouchend);
-    this.puck.addEventListener("touchcancel", this.onTouchcancel);
-    this.puck.addEventListener("touchleave", this.onTouchleave);
     this.puck.addEventListener("pointermove", this.onPointermove);
   }
 
   disable(): void {
-    this.puck.removeEventListener("touchstart", this.onTouchstart);
-    this.puck.removeEventListener("touchend", this.onTouchend);
-    this.puck.removeEventListener("touchcancel", this.onTouchcancel);
-    this.puck.removeEventListener("touchleave", this.onTouchleave);
     this.puck.removeEventListener("pointermove", this.onPointermove);
   }
 }
