@@ -81,10 +81,9 @@ export class RikaiPuck {
   private readonly onTouchleave = (event: TouchEvent) => {
     // console.log(3);
   }
-  private readonly onTouchmove = (event: TouchEvent | MouseEvent) => {
-    // console.log(`${event.type}`, event);
+  private readonly onPointermove = (event: PointerEvent) => {
     event.preventDefault();
-    const { clientX, clientY } = (event as TouchEvent).targetTouches ? (event as TouchEvent).targetTouches[0] : event as MouseEvent;
+    const { clientX, clientY } = event;
     this.puckX = clientX - this.puckWidth / 2;
     this.puckY = clientY - this.puckHeight / 2;
     window.dispatchEvent(
@@ -120,8 +119,7 @@ export class RikaiPuck {
     this.puck.addEventListener("touchend", this.onTouchend);
     this.puck.addEventListener("touchcancel", this.onTouchcancel);
     this.puck.addEventListener("touchleave", this.onTouchleave);
-    this.puck.addEventListener("touchmove", this.onTouchmove);
-    this.puck.addEventListener("mousemove", this.onTouchmove);
+    this.puck.addEventListener("pointermove", this.onPointermove);
   }
 
   disable(): void {
@@ -129,7 +127,6 @@ export class RikaiPuck {
     this.puck.removeEventListener("touchend", this.onTouchend);
     this.puck.removeEventListener("touchcancel", this.onTouchcancel);
     this.puck.removeEventListener("touchleave", this.onTouchleave);
-    this.puck.removeEventListener("touchmove", this.onTouchmove);
-    this.puck.removeEventListener("mousemove", this.onTouchmove);
+    this.puck.removeEventListener("pointermove", this.onPointermove);
   }
 }
