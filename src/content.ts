@@ -1298,18 +1298,23 @@ declare global {
     browser.runtime.sendMessage({ type: 'disabled' });
   }
 
-  window.addEventListener(
-    'DOMContentLoaded',
-    (event) => {
-      const rp = new RikaiPuck();
-      rp.render(document.body);
-      rp.enable();
-    },
-    {
-      once: true,
-    },
-  );
+  function onDOMContentLoaded(): void {
+    const rp = new RikaiPuck();
+    rp.render(document.body);
+    rp.enable();
+  }
 
+  if (document?.readyState === "interactive") {
+    onDOMContentLoaded();
+  } else {
+    window.addEventListener(
+      'DOMContentLoaded',
+      onDOMContentLoaded,
+      {
+        once: true,
+      },
+    );
+  }
 })();
 
 export default ContentHandler;
