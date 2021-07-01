@@ -995,10 +995,7 @@ export class ContentHandler {
       return;
     }
 
-    const doc: Document = this.currentTarget
-      ? this.currentTarget.ownerDocument!
-      : window.document;
-
+    const doc: Document = this.currentTarget?.ownerDocument ?? window.document;
     const popupOptions: PopupOptions = {
       accentDisplay: this.config.accentDisplay,
       copyIndex: this.copyIndex,
@@ -1185,9 +1182,14 @@ declare global {
   //
   let port: Browser.Runtime.Port | undefined;
 
+  // Selection puck
+  const puck = new RikaiPuck();
+  let theme = 'default';
+
   window.readerScriptVer = __VERSION__;
   window.removeReaderScript = () => {
     disable();
+    puck.unmount();
     browser.runtime.onMessage.removeListener(onMessage);
   };
 
@@ -1208,6 +1210,18 @@ declare global {
     });
   }
 
+  // Render the puck
+  if (document.readyState !== 'loading') {
+    renderPuck();
+  } else {
+    window.addEventListener('DOMContentLoaded', renderPuck);
+  }
+
+  function renderPuck() {
+    puck.render({ doc: document, theme });
+    puck.enable();
+  }
+
   function onMessage(request: any): Promise<string> {
     if (typeof request.type !== 'string') {
       return Promise.reject(
@@ -1221,6 +1235,11 @@ declare global {
           typeof request.config === 'object',
           'No config object provided with enable message'
         );
+
+        if (request.config.popupStyle !== theme) {
+          theme = request.config.popupStyle;
+          puck.setTheme(theme);
+        }
 
         const tabId: number | undefined =
           typeof request.id === 'number' ? request.id : undefined;
@@ -1296,24 +1315,6 @@ declare global {
 
   function onPageHide() {
     browser.runtime.sendMessage({ type: 'disabled' });
-  }
-
-  function onDOMContentLoaded(): void {
-    const rp = new RikaiPuck();
-    rp.render(document.body);
-    rp.enable();
-  }
-
-  if (document?.readyState === "interactive") {
-    onDOMContentLoaded();
-  } else {
-    window.addEventListener(
-      'DOMContentLoaded',
-      onDOMContentLoaded,
-      {
-        once: true,
-      },
-    );
   }
 })();
 
