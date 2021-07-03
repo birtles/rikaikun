@@ -22,6 +22,55 @@ export class RikaiPuck {
     }
   }
 
+  private setPositionWithinSafeArea(x: number, y: number) {
+    if (!this.puck) {
+      return;
+    }
+
+    const computedStyle = getComputedStyle(this.puck);
+    const safeAreaTop = parseFloat(
+      computedStyle.getPropertyValue('--tenten-puck-safe-area-inset-top')
+    );
+    const safeAreaRight = parseFloat(
+      computedStyle.getPropertyValue('--tenten-puck-safe-area-inset-right')
+    );
+    const safeAreaBottom = parseFloat(
+      computedStyle.getPropertyValue('--tenten-puck-safe-area-inset-bottom')
+    );
+    const safeAreaLeft = parseFloat(
+      computedStyle.getPropertyValue('--tenten-puck-safe-area-inset-left')
+    );
+
+    if (
+      isNaN(safeAreaTop) ||
+      isNaN(safeAreaRight) ||
+      isNaN(safeAreaBottom) ||
+      isNaN(safeAreaLeft)
+    ) {
+      return;
+    }
+
+    /**
+     * window.innerWidth returns the viewport width, including the width of any scrollbars.
+     *
+     * In practice, it seems that modern browsers (at least on macOS) lay their scrollbars over
+     * the viewport rather than offsetting it, so we should be fine to not compensate for them.
+     * @see https://developer.mozilla.org/en-US/docs/Web/API/Window/innerWidth#usage_notes
+     * @see https://stackoverflow.com/a/7205786/5951226
+     */
+    const { innerWidth, innerHeight } = window;
+
+    const minX = safeAreaLeft;
+    const maxX = innerWidth - safeAreaRight - this.puckWidth;
+    const minY = safeAreaTop;
+    const maxY = innerHeight - safeAreaBottom - this.puckHeight;
+
+    this.setPosition(
+      Math.min(Math.max(minX, x), maxX),
+      Math.min(Math.max(minY, y), maxY)
+    );
+  }
+
   private readonly onPointerMove = (event: PointerEvent) => {
     if (!this.puckWidth || !this.puckHeight || !this.enabled) {
       return;
@@ -30,7 +79,7 @@ export class RikaiPuck {
     event.preventDefault();
 
     const { clientX, clientY } = event;
-    this.setPosition(
+    this.setPositionWithinSafeArea(
       clientX - this.puckWidth / 2,
       clientY - this.puckHeight / 2
     );
@@ -64,6 +113,10 @@ export class RikaiPuck {
     event.stopPropagation();
   };
 
+  private readonly onWindowResize = (event: UIEvent) => {
+    this.setPositionWithinSafeArea(this.puckX, this.puckY);
+  };
+
   render({ doc, theme }: { doc: Document; theme: string }): void {
     // Set up shadow tree
     const container = getOrCreateEmptyContainer({
@@ -91,18 +144,15 @@ export class RikaiPuck {
       this.puckHeight = height;
     }
 
-    // Calculate the initial position
-    const viewportWidth = document.documentElement.clientWidth;
-    const viewportHeight = document.documentElement.clientHeight;
-    const safeAreaInsetRight = 16; // TODO: calculate properly
-    const safeAreaInsetBottom = 200; // TODO: calculate properly
-    this.setPosition(
-      viewportWidth - this.puckWidth - safeAreaInsetRight,
-      viewportHeight - this.puckHeight - safeAreaInsetBottom
+    // Place in the bottom-right of the safe area
+    this.setPositionWithinSafeArea(
+      Number.MAX_SAFE_INTEGER,
+      Number.MAX_SAFE_INTEGER
     );
 
     // Add event listeners
     if (this.enabled) {
+      window.addEventListener('resize', this.onWindowResize);
       this.puck.addEventListener('pointermove', this.onPointerMove);
       this.puck.addEventListener('mousemove', this.onMouseMove, {
         capture: true,
@@ -133,6 +183,7 @@ export class RikaiPuck {
   enable(): void {
     this.enabled = true;
     if (this.puck) {
+      window.addEventListener('resize', this.onWindowResize);
       this.puck.addEventListener('pointermove', this.onPointerMove);
       this.puck.addEventListener('mousemove', this.onMouseMove, {
         capture: true,
@@ -143,6 +194,7 @@ export class RikaiPuck {
   disable(): void {
     this.enabled = false;
     if (this.puck) {
+      window.removeEventListener('resize', this.onWindowResize);
       this.puck.removeEventListener('pointermove', this.onPointerMove);
       this.puck.removeEventListener('mousemove', this.onMouseMove, {
         capture: true,
