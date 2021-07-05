@@ -24,7 +24,6 @@ import {
   CopyKanjiKeyStrings,
   CopyNextKeyStrings,
 } from './copy-keys';
-import { getHash } from './hash';
 import { convertMeasure, MeasureMeta } from './measure';
 import { SelectionMeta } from './meta';
 import { NamePreview, QueryResult } from './query';
@@ -34,7 +33,7 @@ import {
   ReferenceAbbreviation,
 } from './refs';
 import { NameResult, Sense, WordResult } from './search-result';
-import { isForeignObjectElement, isSvgDoc, SVG_NS } from './svg';
+import { SVG_NS } from './svg';
 import { EraInfo, EraMeta, getEraInfo } from './years';
 
 import popupStyles from '../css/popup.css';
