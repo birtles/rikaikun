@@ -5,6 +5,18 @@ import {
 
 import puckStyles from '../css/puck.css';
 
+interface ViewportDimensions {
+  clientWidth: number;
+  clientHeight: number;
+}
+
+interface SafeAreaInsets {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+}
+
 export class RikaiPuck {
   private puck: HTMLDivElement | undefined;
   private enabled = false;
@@ -13,6 +25,8 @@ export class RikaiPuck {
   private puckY: number;
   private puckWidth: number;
   private puckHeight: number;
+  private cachedViewportDimensions: ViewportDimensions | null = null;
+  private cachedSafeArea: SafeAreaInsets | null = null;
 
   private setPosition(x: number, y: number) {
     this.puckX = x;
@@ -22,48 +36,67 @@ export class RikaiPuck {
     }
   }
 
+  private getViewportDimensions(body: HTMLElement): ViewportDimensions {
+    if (this.cachedViewportDimensions) {
+      return this.cachedViewportDimensions;
+    }
+
+    return {
+      clientWidth: body.clientWidth,
+      clientHeight: body.clientHeight,
+    };
+  }
+
+  private getSafeArea(safeAreaEnvProvider: HTMLElement): SafeAreaInsets {
+    if (this.cachedSafeArea) {
+      return this.cachedSafeArea;
+    }
+
+    const computedStyle = getComputedStyle(safeAreaEnvProvider);
+
+    return {
+      top:
+        parseFloat(
+          computedStyle.getPropertyValue('--tenten-puck-safe-area-inset-top')
+        ) || 0,
+      right:
+        parseFloat(
+          computedStyle.getPropertyValue('--tenten-puck-safe-area-inset-right')
+        ) || 0,
+      bottom:
+        parseFloat(
+          computedStyle.getPropertyValue('--tenten-puck-safe-area-inset-bottom')
+        ) || 0,
+      left:
+        parseFloat(
+          computedStyle.getPropertyValue('--tenten-puck-safe-area-inset-left')
+        ) || 0,
+    };
+  }
+
   private setPositionWithinSafeArea(x: number, y: number) {
     if (!this.puck) {
       return;
     }
 
-    const computedStyle = getComputedStyle(this.puck);
-    const safeAreaTop = parseFloat(
-      computedStyle.getPropertyValue('--tenten-puck-safe-area-inset-top')
-    );
-    const safeAreaRight = parseFloat(
-      computedStyle.getPropertyValue('--tenten-puck-safe-area-inset-right')
-    );
-    const safeAreaBottom = parseFloat(
-      computedStyle.getPropertyValue('--tenten-puck-safe-area-inset-bottom')
-    );
-    const safeAreaLeft = parseFloat(
-      computedStyle.getPropertyValue('--tenten-puck-safe-area-inset-left')
-    );
-
-    if (
-      isNaN(safeAreaTop) ||
-      isNaN(safeAreaRight) ||
-      isNaN(safeAreaBottom) ||
-      isNaN(safeAreaLeft)
-    ) {
+    const body = this.puck.ownerDocument?.body;
+    if (!body) {
       return;
     }
 
-    /**
-     * window.innerWidth returns the viewport width, including the width of any scrollbars.
-     *
-     * In practice, it seems that modern browsers (at least on macOS) lay their scrollbars over
-     * the viewport rather than offsetting it, so we should be fine to not compensate for them.
-     * @see https://developer.mozilla.org/en-US/docs/Web/API/Window/innerWidth#usage_notes
-     * @see https://stackoverflow.com/a/7205786/5951226
-     */
-    const { innerWidth, innerHeight } = window;
+    const {
+      top: safeAreaTop,
+      right: safeAreaRight,
+      bottom: safeAreaBottom,
+      left: safeAreaLeft,
+    } = this.getSafeArea(this.puck);
+
+    const { clientWidth, clientHeight } = this.getViewportDimensions(body);
 
     const minX = safeAreaLeft;
-    const maxX = innerWidth - safeAreaRight - this.puckWidth;
+    const maxX = clientWidth - safeAreaRight - this.puckWidth;
     const minY = safeAreaTop;
-    const maxY = innerHeight - safeAreaBottom - this.puckHeight;
+    const maxY = clientHeight - safeAreaBottom - this.puckHeight;
 
     this.setPosition(
       Math.min(Math.max(minX, x), maxX),
@@ -114,6 +147,8 @@ export class RikaiPuck {
   };
 
   private readonly onWindowResize = (event: UIEvent) => {
+    this.cachedViewportDimensions = null;
+    this.cachedSafeArea = null;
     this.setPositionWithinSafeArea(this.puckX, this.puckY);
   };
 
