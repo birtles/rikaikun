@@ -6,8 +6,8 @@ import {
 import puckStyles from '../css/puck.css';
 
 interface ViewportDimensions {
-  clientWidth: number;
-  clientHeight: number;
+  viewportWidth: number;
+  viewportHeight: number;
 }
 
 interface SafeAreaInsets {
@@ -26,7 +26,7 @@ export class RikaiPuck {
   private puckWidth: number;
   private puckHeight: number;
   private cachedViewportDimensions: ViewportDimensions | null = null;
-  private cachedSafeArea: SafeAreaInsets | null = null;
+  private cachedSafeAreaInsets: SafeAreaInsets | null = null;
 
   private setPosition(x: number, y: number) {
     this.puckX = x;
@@ -36,25 +36,40 @@ export class RikaiPuck {
     }
   }
 
-  private getViewportDimensions(body: HTMLElement): ViewportDimensions {
+  private getViewportDimensions(document: Document): ViewportDimensions {
     if (this.cachedViewportDimensions) {
       return this.cachedViewportDimensions;
     }
 
-    return {
-      clientWidth: body.clientWidth,
-      clientHeight: body.clientHeight,
+    /**
+     * We'd ideally use document.documentElement.clientWidth and
+     * document.documentElement.clientHeight for both viewport measurements, but
+     * iOS 15 Safari doesn't behave suitably for that.
+     *
+     * iOS 15 Safari:
+     * - seems to measure its safe area insets from the area defined by
+     *   document.defaultView.innerHeight and .innerWidth.
+     * - decreases both document.defaultView.innerHeight and the safe-area-inset-bottom
+     *   in compact mode, and vice versa in non-compact mode.
+     *
+     * @see https://github.com/shirakaba/10ten-ja-reader/pull/3#issuecomment-875127566
+     */
+    this.cachedViewportDimensions = {
+      viewportWidth: document.documentElement.clientWidth,
+      viewportHeight: document.defaultView?.innerHeight ?? 0,
     };
+
+    return this.cachedViewportDimensions;
   }
 
   private getSafeArea(safeAreaEnvProvider: HTMLElement): SafeAreaInsets {
-    if (this.cachedSafeArea) {
-      return this.cachedSafeArea;
+    if (this.cachedSafeAreaInsets) {
+      return this.cachedSafeAreaInsets;
     }
 
     const computedStyle = getComputedStyle(safeAreaEnvProvider);
 
-    return {
+    this.cachedSafeAreaInsets = {
       top:
         parseFloat(
           computedStyle.getPropertyValue('--tenten-puck-safe-area-inset-top')
@@ -72,15 +87,12 @@ export class RikaiPuck {
           computedStyle.getPropertyValue('--tenten-puck-safe-area-inset-left')
         ) || 0,
     };
+
+    return this.cachedSafeAreaInsets;
   }
 
   private setPositionWithinSafeArea(x: number, y: number) {
     if (!this.puck) {
-      return;
-    }
-
-    const body = this.puck.ownerDocument?.body;
-    if (!body) {
       return;
     }
 
@@ -91,12 +103,14 @@ export class RikaiPuck {
       left: safeAreaLeft,
     } = this.getSafeArea(this.puck);
 
-    const { clientWidth, clientHeight } = this.getViewportDimensions(body);
+    const { viewportWidth, viewportHeight } = this.getViewportDimensions(
+      this.puck.ownerDocument
+    );
 
     const minX = safeAreaLeft;
-    const maxX = clientWidth - safeAreaRight - this.puckWidth;
+    const maxX = viewportWidth - safeAreaRight - this.puckWidth;
     const minY = safeAreaTop;
-    const maxY = clientHeight - safeAreaBottom - this.puckHeight;
+    const maxY = viewportHeight - safeAreaBottom - this.puckHeight;
 
     this.setPosition(
       Math.min(Math.max(minX, x), maxX),
@@ -148,7 +162,7 @@ export class RikaiPuck {
 
   private readonly onWindowResize = (event: UIEvent) => {
     this.cachedViewportDimensions = null;
-    this.cachedSafeArea = null;
+    this.cachedSafeAreaInsets = null;
     this.setPositionWithinSafeArea(this.puckX, this.puckY);
   };
 
