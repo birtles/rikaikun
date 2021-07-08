@@ -26,7 +26,7 @@ export class RikaiPuck {
   private puckHeight: number;
   private cachedViewportDimensions: ViewportDimensions | null = null;
   private cachedSafeAreaInsets: SafeAreaInsets | null = null;
-  private puckIsBeingDragged: boolean = false;
+  private isBeingDragged: boolean = false;
 
   private setPosition(x: number, y: number) {
     this.puckX = x;
@@ -123,7 +123,7 @@ export class RikaiPuck {
       !this.puckWidth ||
       !this.puckHeight ||
       !this.enabled ||
-      !this.puckIsBeingDragged
+      !this.isBeingDragged
     ) {
       return;
     }
@@ -157,14 +157,6 @@ export class RikaiPuck {
     }
   };
 
-  // Prevent any mouse events on the puck itself from being used for lookup.
-  //
-  // At least in Firefox we can get _both_ pointer events and mouse events being
-  // dispatched.
-  private readonly onPuckMouseMove = (event: MouseEvent) => {
-    event.stopPropagation();
-  };
-
   private readonly onPuckPointerDown = (event: PointerEvent) => {
     if (!this.enabled || !this.puck) {
       return;
@@ -173,44 +165,23 @@ export class RikaiPuck {
     event.preventDefault();
     event.stopPropagation();
 
-    this.puckIsBeingDragged = true;
-    this.puck.addEventListener('mousemove', this.onPuckMouseMove, {
-      capture: true,
-    });
-    window.addEventListener('pointermove', this.onWindowPointerMove, {
-      capture: true,
-    });
-    window.addEventListener('pointerup', this.onWindowPointerUp, {
-      capture: true,
-    });
-    window.addEventListener('pointercancel', this.onWindowPointerCancel, {
-      capture: true,
-    });
+    this.isBeingDragged = true;
+    this.puck.style.pointerEvents = 'none';
+
+    window.addEventListener('pointermove', this.onWindowPointerMove);
+    window.addEventListener('pointerup', this.stopDraggingPuck);
+    window.addEventListener('pointercancel', this.stopDraggingPuck);
   };
 
   private stopDraggingPuck() {
-    this.puckIsBeingDragged = false;
-    this.puck?.removeEventListener('mousemove', this.onPuckMouseMove, {
-      capture: true,
-    });
-    window.removeEventListener('pointermove', this.onWindowPointerMove, {
-      capture: true,
-    });
-    window.removeEventListener('pointerup', this.onWindowPointerUp, {
-      capture: true,
-    });
-    window.removeEventListener('pointercancel', this.onWindowPointerCancel, {
-      capture: true,
-    });
+    this.isBeingDragged = false;
+    if (this.puck) {
+      this.puck.style.pointerEvents = 'revert';
+    }
+    window.removeEventListener('pointermove', this.onWindowPointerMove);
+    window.removeEventListener('pointerup', this.stopDraggingPuck);
+    window.removeEventListener('pointercancel', this.stopDraggingPuck);
   }
-
-  private readonly onWindowPointerUp = (event: PointerEvent) => {
-    this.stopDraggingPuck();
-  };
-
-  private readonly onWindowPointerCancel = (event: PointerEvent) => {
-    this.stopDraggingPuck();
-  };
 
   private readonly onWindowResize = (event: UIEvent) => {
     this.cachedViewportDimensions = null;
@@ -254,9 +225,7 @@ export class RikaiPuck {
     // Add event listeners
     if (this.enabled) {
       window.addEventListener('resize', this.onWindowResize);
-      this.puck.addEventListener('pointerdown', this.onPuckPointerDown, {
-        capture: true,
-      });
+      this.puck.addEventListener('pointerdown', this.onPuckPointerDown);
     }
   }
 
@@ -284,9 +253,7 @@ export class RikaiPuck {
     this.enabled = true;
     if (this.puck) {
       window.addEventListener('resize', this.onWindowResize);
-      this.puck.addEventListener('pointerdown', this.onPuckPointerDown, {
-        capture: true,
-      });
+      this.puck.addEventListener('pointerdown', this.onPuckPointerDown);
     }
   }
 
@@ -295,9 +262,7 @@ export class RikaiPuck {
     if (this.puck) {
       window.removeEventListener('resize', this.onWindowResize);
       this.stopDraggingPuck();
-      this.puck.removeEventListener('pointerdown', this.onPuckPointerDown, {
-        capture: true,
-      });
+      this.puck.removeEventListener('pointerdown', this.onPuckPointerDown);
     }
   }
 }
