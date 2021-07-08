@@ -173,7 +173,7 @@ export class RikaiPuck {
     window.addEventListener('pointercancel', this.stopDraggingPuck);
   };
 
-  private stopDraggingPuck() {
+  private readonly stopDraggingPuck = () => {
     this.isBeingDragged = false;
     if (this.puck) {
       this.puck.style.pointerEvents = 'revert';
@@ -181,7 +181,7 @@ export class RikaiPuck {
     window.removeEventListener('pointermove', this.onWindowPointerMove);
     window.removeEventListener('pointerup', this.stopDraggingPuck);
     window.removeEventListener('pointercancel', this.stopDraggingPuck);
-  }
+  };
 
   private readonly onWindowResize = (event: UIEvent) => {
     this.cachedViewportDimensions = null;
