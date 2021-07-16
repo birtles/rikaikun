@@ -229,8 +229,7 @@ function resetContainer({
   // the popup
   container.style.left = '5px';
   container.style.top = '5px';
-  container.style.maxWidth = 'initial';
-  container.style.maxHeight = 'initial';
+  container.style.minWidth = '100px';
 
   // Reset the container position and size so that we can consistently measure
   // the size of the popup.

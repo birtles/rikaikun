@@ -45,9 +45,7 @@
   --selected-reading-highlight: #3e3a39;
 
   --meta-bg: var(--cell-highlight-bg);
-  /* TODO: check whether to keep only one of these two */
   --status-bg: var(--cell-highlight-bg);
-  --copy-status-bg: var(--cell-highlight-bg);
 }
 
 .window.-light .w-def .tag-fem,
@@ -97,8 +95,6 @@
 
   --selected-highlight: var(--bg-color);
 
-  /* TODO: check whether to keep only one of these two */
-  --copy-status-bg: rgba(255, 255, 255, 0.2);
   --status-bg: rgba(255, 255, 255, 0.2);
   --meta-bg: rgba(255, 255, 255, 0.2);
 }
@@ -129,8 +125,6 @@
 
   --selected-highlight: #2277d9;
 
-  /* TODO: check whether to keep only one of these two */
-  --copy-status-bg: rgba(255, 255, 255, 0.2);
   --status-bg: rgba(255, 255, 255, 0.2);
   --meta-bg: rgba(255, 255, 255, 0.2);
 }
@@ -166,8 +160,6 @@
   --selected-highlight: var(--primary-highlight);
 
   --meta-bg: var(--cell-highlight-bg);
-  /* TODO: check whether to keep only one of these two */
-  --copy-status-bg: var(--cell-highlight-bg);
   --status-bg: var(--cell-highlight-bg);
 }
 
@@ -199,7 +191,5 @@
   --selected-highlight: var(--primary-highlight);
 
   --meta-bg: var(--cell-highlight-bg);
-  /* TODO: check whether to keep only one of these two */
-  --copy-status-bg: var(--cell-highlight-bg);
   --status-bg: var(--cell-highlight-bg);
 }
